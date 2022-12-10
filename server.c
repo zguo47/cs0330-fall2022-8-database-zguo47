@@ -248,8 +248,6 @@ void *monitor_signal(void *arg) {
         exit(1);
     }
     delete_all();
-    pthread_join(sig_handler->thread, 0);
-    pthread_exit(0);
 }
 
 sig_handler_t *sig_handler_constructor() {
@@ -316,6 +314,7 @@ int main(int argc, char *argv[]) {
     
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
+    sigaddset(&set, SIGINT);
     s = pthread_sigmask(SIG_BLOCK, &set, NULL);
     if (s != 0){
         handle_error_en(s, "pthread_sigmask");
