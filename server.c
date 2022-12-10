@@ -220,7 +220,7 @@ void *monitor_signal(void *arg) {
         handle_error_en(sigw, "sigwait failed.\n");
     }
     delete_all();
-    pthread_join(sig_handler, 0);
+    pthread_join(sig_handler->thread, 0);
 }
 
 sig_handler_t *sig_handler_constructor() {
