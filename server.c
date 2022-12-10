@@ -306,7 +306,9 @@ int main(int argc, char *argv[]) {
     // }
 
     // sig_handler_destructor(sig_handler);
-    pthread_exit(0);
+    pthread_cancel(tid);
+    pthread_join(tid, 0);
+    // pthread_exit(tid);
     // delete_all();
 
     return 0;
