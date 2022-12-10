@@ -228,17 +228,19 @@ sig_handler_t *sig_handler_constructor() {
     sig_handler_t *signal_handler = (sig_handler_t *)malloc(sizeof(sig_handler_t));
     sigemptyset(&signal_handler->set);
     sigaddset(&signal_handler->set, SIGINT);
+    int s;
 
     int creat = pthread_create(&signal_handler->thread, 0, (void *(*)(void *))monitor_signal, (void *)signal_handler);
     if (creat != 0){
         sigemptyset(&signal_handler->set);
-        free(sig_handler);
+        free(signal_handler);
         handle_error_en(creat, "pthread_create failed");
     }
     s = pthread_sigmask(SIG_BLOCK, &signal_handler->set, NULL);
     if (s != 0){
         handle_error_en(s, "pthread_sigmask");
-    }  
+    }
+    return signal_handler;  
 }
 
 void sig_handler_destructor(sig_handler_t *sighandler) {
