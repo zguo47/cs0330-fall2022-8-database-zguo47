@@ -147,13 +147,13 @@ void *run_client(void *arg) {
     //
     // You will need to modify this when implementing functionality for stop and go!
     client_t *new_client = (client_t *)arg;
-    client_t *curr_client;
+    // client_t *curr_client;
     // void *retval;
-    while (thread_list_head->next != NULL){ curr_client = thread_list_head->next; };
-    curr_client->next = new_client;
-    new_client->prev = curr_client;
+    // while (thread_list_head->next != NULL){ curr_client = thread_list_head->next; };
+    // curr_client->next = new_client;
+    // new_client->prev = curr_client;
 
-    // pthread_cleanup_push(thread_cleanup, (void *)new_client);
+    pthread_cleanup_push(thread_cleanup, (void *)new_client);
 
     char response[1024];
     char command[1024];
@@ -164,7 +164,7 @@ void *run_client(void *arg) {
         interpret_command(command, response, strlen(response));
     }
 
-    pthread_exit(new_client->thread);
+    pthread_exit(0);
     client_destructor(new_client);
     // pthread_cleanup_pop();
 }
@@ -175,11 +175,12 @@ void *run_client(void *arg) {
 // }
 
 // Cleanup routine for client threads, called on cancels and exit.
-// void thread_cleanup(void *arg) {
-//     // TODO: Remove the client object from thread list and call
-//     // client_destructor. This function must be thread safe! The client must
-//     // be in the list before this routine is ever run.
-// }
+void thread_cleanup(void *arg) {
+    // TODO: Remove the client object from thread list and call
+    // client_destructor. This function must be thread safe! The client must
+    // be in the list before this routine is ever run.
+    client_destructor((client_t *)arg);
+}
 
 // Code executed by the signal handler thread. For the purpose of this
 // assignment, there are two reasonable ways to implement this.
