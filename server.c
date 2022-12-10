@@ -148,7 +148,7 @@ void *run_client(void *arg) {
     // You will need to modify this when implementing functionality for stop and go!
     client_t *new_client = (client_t *)arg;
     client_t *curr_client;
-    void *retval;
+    // void *retval;
     while (thread_list_head->next != NULL){ curr_client = thread_list_head->next; };
     curr_client->next = new_client;
     new_client->prev = curr_client;
