@@ -265,7 +265,7 @@ sig_handler_t *sig_handler_constructor() {
         free(signal_handler);
         handle_error_en(creat, "pthread_create failed");
     }
-    s = pthread_sigmask(SIG_BLOCK, &signal_handler->set, NULL);
+    s = pthread_sigmask(SIG_DFL, &signal_handler->set, NULL);
     if (s != 0){
         handle_error_en(s, "pthread_sigmask");
     }
@@ -310,8 +310,6 @@ int main(int argc, char *argv[]) {
     pthread_t tid;
     sigset_t set;
     int s;
-
-    sig_handler_t *sig_handler = sig_handler_constructor();
     
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
@@ -320,6 +318,8 @@ int main(int argc, char *argv[]) {
     if (s != 0){
         handle_error_en(s, "pthread_sigmask");
     }  
+    
+    sig_handler_t *sig_handler = sig_handler_constructor();
 
     int port = atoi(argv[1]);
     if (port != 0){
