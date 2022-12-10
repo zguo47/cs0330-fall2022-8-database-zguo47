@@ -151,10 +151,17 @@ void *run_client(void *arg) {
 
     if (thread_list_head == NULL){
         thread_list_head = new_client;
+    } else if (thread_list_head->next == NULL){
+        thread_list_head->next = new_client;
+        new_client->prev = thread_list_head;
     }
-    while (thread_list_head->next != NULL){ curr_client = thread_list_head->next; };
-    curr_client->next = new_client;
-    new_client->prev = curr_client;
+    else {
+        while (thread_list_head->next != NULL){ 
+            curr_client = thread_list_head->next; 
+        }
+        curr_client->next = new_client;
+        new_client->prev = curr_client;
+    }
 
     pthread_cleanup_push(thread_cleanup, (void *)new_client);
 
@@ -284,7 +291,7 @@ int main(int argc, char *argv[]) {
     sigset_t set;
     int s;
 
-    // sig_handler_t *sig_handler = sig_handler_constructor();
+    sig_handler_t *sig_handler = sig_handler_constructor();
     
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
@@ -353,7 +360,7 @@ int main(int argc, char *argv[]) {
 
     // }
 
-    // sig_handler_destructor(sig_handler);
+    sig_handler_destructor(sig_handler);
     // pthread_join(tid, 0);
     // pthread_exit(0);
     // delete_all();
