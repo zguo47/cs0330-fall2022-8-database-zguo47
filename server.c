@@ -170,9 +170,9 @@ void *run_client(void *arg) {
     response[0] = '\0';
 
     printf("hello\n");
-    int recv = comm_serve(new_client->cxstr, response, command);
-    while (recv != -1){
-        printf("hi\n");
+    int recv;
+
+    while ((recv = comm_serve(new_client->cxstr, response, command)) != -1){
         interpret_command(command, response, 1024);
     }
 
