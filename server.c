@@ -164,7 +164,7 @@ void *run_client(void *arg) {
 
     int recv = comm_serve(new_client->cxstr, response, command);
     while (recv != -1){
-        interpret_command(command, response, strlen(response));
+        interpret_command(command, response, 1024);
     }
 
     pthread_cleanup_pop(1);
