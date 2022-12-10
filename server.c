@@ -147,11 +147,14 @@ void *run_client(void *arg) {
     //
     // You will need to modify this when implementing functionality for stop and go!
     client_t *new_client = (client_t *)arg;
-    // client_t *curr_client;
-    // void *retval;
-    // while (thread_list_head->next != NULL){ curr_client = thread_list_head->next; };
-    // curr_client->next = new_client;
-    // new_client->prev = curr_client;
+    client_t *curr_client;
+
+    if (thread_list_head == NULL){
+        thread_list_head = new_client;
+    }
+    while (thread_list_head->next != NULL){ curr_client = thread_list_head->next; };
+    curr_client->next = new_client;
+    new_client->prev = curr_client;
 
     pthread_cleanup_push(thread_cleanup, (void *)new_client);
 
@@ -170,16 +173,33 @@ void *run_client(void *arg) {
 
 }
 
-// void delete_all() {
-//     // TODO: Cancel every thread in the client thread list with the
-//     // pthread_cancel function.
-// }
+void delete_all() {
+    // TODO: Cancel every thread in the client thread list with the
+    // pthread_cancel function.
+    client_t *curr_client = thread_list_head;
+    int cnt;
+
+    if (curr_client != NULL){
+        cnt = pthread_cancel(curr_client->thread);
+        if (cnt != 0){
+            handle_error_en(cnt, "pthread_cancel failed.\n");
+        }
+        while (thread_list_head->next != NULL){ 
+            curr_client = curr_client->next; 
+            cnt = pthread_cancel(curr_client->thread);
+            if (cnt != 0){
+            handle_error_en(cnt, "pthread_cancel failed.\n");
+            }
+        }
+    }
+}
 
 // Cleanup routine for client threads, called on cancels and exit.
 void thread_cleanup(void *arg) {
     // TODO: Remove the client object from thread list and call
     // client_destructor. This function must be thread safe! The client must
     // be in the list before this routine is ever run.
+
     client_destructor((client_t *)arg);
 }
 
@@ -190,35 +210,55 @@ void thread_cleanup(void *arg) {
 // decision. One way or another, all of the server's client threads
 // should terminate on SIGINT. The server (this includes the listener
 // thread) should not, however, terminate on SIGINT!
-// void *monitor_signal(void *arg) {
-//     // TODO: Wait for a SIGINT to be sent to the server process and cancel
-//     // all client threads when one arrives.
-//     return NULL;
-// }
+void *monitor_signal(void *arg) {
+    // TODO: Wait for a SIGINT to be sent to the server process and cancel
+    // all client threads when one arrives.
+    sig_handler_t *sig_handler = (sig_handler_t *)arg;
+    int sigwait, sig;
+    sigwait = sigwait(&sig_handler->set, &sig);
+    if (sigwait != 0){
+        handle_error_en(sigwait, "sigwait failed.\n");
+    }
+    delete_all();
+}
 
-// sig_handler_t *sig_handler_constructor() {
-//     // TODO: Create a thread to handle SIGINT. The thread that this function
-//     // creates should be the ONLY thread that ever responds to SIGINT.
-//     sig_handler_t *signal_handler = (sig_handler_t *)malloc(sizeof(sig_handler_t));
-//     sigemptyset(&signal_handler->set);
-//     sigaddset(&signal_handler->set, SIGINT);
+sig_handler_t *sig_handler_constructor() {
+    // TODO: Create a thread to handle SIGINT. The thread that this function
+    // creates should be the ONLY thread that ever responds to SIGINT.
+    sig_handler_t *signal_handler = (sig_handler_t *)malloc(sizeof(sig_handler_t));
+    sigemptyset(&signal_handler->set);
+    sigaddset(&signal_handler->set, SIGINT);
 
-//     int creat = pthread_create(&signal_handler->thread, 0, (void *(*)(void *))monitor_signal, (void *)sig_handler);
-//     if (creat != 0){
-//         sigemptyset(&signal_handler->set);
-//         free(sig_handler);
-//         handle_error_en(crete, "pthread_create failed");
-//     }
-//     s = pthread_sigmask(SIG_BLOCK, &signal_handler->set, NULL);
-//     if (s != 0){
-//         handle_error_en(s, "pthread_sigmask");
-//     }  
-// }
+    int creat = pthread_create(&signal_handler->thread, 0, (void *(*)(void *))monitor_signal, (void *)sig_handler);
+    if (creat != 0){
+        sigemptyset(&signal_handler->set);
+        free(sig_handler);
+        handle_error_en(crete, "pthread_create failed");
+    }
+    s = pthread_sigmask(SIG_BLOCK, &signal_handler->set, NULL);
+    if (s != 0){
+        handle_error_en(s, "pthread_sigmask");
+    }  
+}
 
-// void sig_handler_destructor(sig_handler_t *sighandler) {
-//     // TODO: Free any resources allocated in sig_handler_constructor.
-//     // Cancel and join with the signal handler's thread. 
-// }
+void sig_handler_destructor(sig_handler_t *sighandler) {
+    // TODO: Free any resources allocated in sig_handler_constructor.
+    // Cancel and join with the signal handler's thread. 
+    int cnt;
+    int join;
+    cnt = pthread_cancel(&sighandler->thread);
+    if (cnt != 0){
+        handle_error_en(cnt, "pthread_cancel failed.\n");
+    }
+    join = pthread_join(&sighandler->thread, 0);
+    if (join != 0){
+        handle_error_en(cnt, "pthread_join failed.\n");
+    }
+
+    sigemptyset(&signhandler->set);
+    free(sig_handler);
+
+}
 
 // The arguments to the server should be the port number.
 int main(int argc, char *argv[]) {
@@ -240,7 +280,7 @@ int main(int argc, char *argv[]) {
     sigset_t set;
     int s;
 
-    // sig_handler_t sig_handler = sig_handler_constructor();
+    sig_handler_t sig_handler = sig_handler_constructor();
     
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
@@ -252,67 +292,66 @@ int main(int argc, char *argv[]) {
     int port = atoi(argv[1]);
     if (port != 0){
             tid = start_listener(atoi(argv[1]), (void (*)(FILE *))client_constructor);
-            // pthread_cancel(tid);
-            pthread_join(tid, 0);
     }else{
         fprintf(stderr, "Invalid port!\n");
         exit(1);
     }
 
-    // int bytesRead;
-    // char buf[1024];
-    // memset(buf, 0, 1024);
+    int bytesRead;
+    char buf[1024];
+    memset(buf, 0, 1024);
 
-    // char *tokens[512];
-    // memset(tokens, 0, 512 * sizeof(char *));
+    char *tokens[512];
+    memset(tokens, 0, 512 * sizeof(char *));
 
-    // while(1){
-    //     if ((bytesRead = read(0, buffer, 1024)) == -1) {
-    //         perror("user input");
-    //         continue;
-    //     } else if (bytesRead == 0){
-    //         exit(1);
-    //     } else {
-    //         while ((token = strtok(buf, " \t\n")) != NULL){
-    //             tokens[i] = token;
-    //             buf = NULL;
-    //             i += 1;
-    //         }
-    //         if (tokens[0] == NULL){
-    //             continue;
-    //         }           
-    //         if (strcmp(tokens[0], "s") == 0){
-    //             client_control_stop();
-    //             continue;
-    //         } else if (strcmp([tokens[0]], "g") == 0){
-    //             client_control_release();
-    //             continue;
-    //         } else if (strcmp(tokens[0], "p") == 0){
-    //             if (tokens[1] != NULL){
-    //                 if (db_print(tokens[1]) == -1){
-    //                     fprintf(stderr, "Cannot open file.\n");
-    //                     continue;
-    //                 }
-    //                 continue;
-    //             }else{
-    //                 if (db_print(stdout) == -1){
-    //                     fprintf(stderr, "Cannot print to stdout.\n");
-    //                     continue;
-    //                 }
-    //                 continue;
-    //             }
+    while(1){
+        if ((bytesRead = read(0, buffer, 1024)) == -1) {
+            perror("user input");
+            continue;
+        } else if (bytesRead == 0){
+            exit(1);
+        } else {
+            while ((token = strtok(buf, " \t\n")) != NULL){
+                tokens[i] = token;
+                buf = NULL;
+                i += 1;
+            }
+            if (tokens[0] == NULL){
+                continue;
+            }           
+            if (strcmp(tokens[0], "s") == 0){
+                client_control_stop();
+                continue;
+            } else if (strcmp([tokens[0]], "g") == 0){
+                client_control_release();
+                continue;
+            } else if (strcmp(tokens[0], "p") == 0){
+                if (tokens[1] != NULL){
+                    if (db_print(tokens[1]) == -1){
+                        fprintf(stderr, "Cannot open file.\n");
+                        continue;
+                    }
+                    continue;
+                }else{
+                    if (db_print(stdout) == -1){
+                        fprintf(stderr, "Cannot print to stdout.\n");
+                        continue;
+                    }
+                    continue;
+                }
 
-    //         } else {
-    //             fprintf(stderr, "Invalid Command! \n");
-    //             continue;
-    //         }
-    //     }
+            } else {
+                fprintf(stderr, "Invalid Command! \n");
+                continue;
+            }
+        }
 
-    // }
+    }
 
-    // sig_handler_destructor(sig_handler);
-    // pthread_exit(tid);
-    // delete_all();
+    sig_handler_destructor(sig_handler);
+    pthread_join(tid, 0);
+    pthread_exit(tid);
+    delete_all();
 
     return 0;
 }
