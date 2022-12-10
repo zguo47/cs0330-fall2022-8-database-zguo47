@@ -164,7 +164,7 @@ void *run_client(void *arg) {
         interpret_command(command, response, strlen(response));
     }
 
-    // pthread_exit(0);
+    pthread_exit(new_client->thread);
     client_destructor(new_client);
     // pthread_cleanup_pop();
 }
