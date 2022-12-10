@@ -147,21 +147,21 @@ void *run_client(void *arg) {
     //
     // You will need to modify this when implementing functionality for stop and go!
     client_t *new_client = (client_t *)arg;
-    // client_t *curr_client;
+    client_t *curr_client;
 
-    // if (thread_list_head == NULL){
-    //     thread_list_head = new_client;
-    // } else if (thread_list_head->next == NULL){
-    //     thread_list_head->next = new_client;
-    //     new_client->prev = thread_list_head;
-    // }
-    // else {
-    //     while (thread_list_head->next != NULL){ 
-    //         curr_client = thread_list_head->next; 
-    //     }
-    //     curr_client->next = new_client;
-    //     new_client->prev = curr_client;
-    // }
+    if (thread_list_head == NULL){
+        thread_list_head = new_client;
+    } else if (thread_list_head->next == NULL){
+        thread_list_head->next = new_client;
+        new_client->prev = thread_list_head;
+    }
+    else {
+        while (thread_list_head->next != NULL){ 
+            curr_client = thread_list_head->next; 
+        }
+        curr_client->next = new_client;
+        new_client->prev = curr_client;
+    }
 
     pthread_cleanup_push(thread_cleanup, (void *)new_client);
 
@@ -208,8 +208,26 @@ void thread_cleanup(void *arg) {
     // TODO: Remove the client object from thread list and call
     // client_destructor. This function must be thread safe! The client must
     // be in the list before this routine is ever run.
+    client_t *curr_client = (client_t *)arg;
+    client_t *prev_client = curr_client->prev;
+    client_t *next_client = curr_client->next;
+    if (prev_client == NULL && next_client == NULL){
+        thread_list_head = NULL;
+    } else if (prev_client == NULL){
+        next_client->prev = NULL;
+        thread_list_head = next_client;
+        curr_client->next = NULL;
+    } else if (next_client == NULL){
+        prev_client->next = NULL;
+        curr_client->prev = NULL;
+    } else {
+        prev_client->next = next_client;
+        next_client->prev = prev_client;
+        curr_client->prev = NULL;
+        curr_client->next = NULL;
+    }
 
-    client_destructor((client_t *)arg);
+    client_destructor(curr_client);
 }
 
 // Code executed by the signal handler thread. For the purpose of this
@@ -226,7 +244,8 @@ void *monitor_signal(void *arg) {
     int sigw, sig;
     sigw = sigwait(&sig_handler->set, &sig);
     if (sigw != 0){
-        handle_error_en(sigw, "sigwait failed.\n");
+        perror("sigwait");
+        exit(1);
     }
     delete_all();
     pthread_join(sig_handler->thread, 0);
@@ -311,61 +330,61 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    // int bytesRead;
-    // char buf[1024];
-    // memset(buf, 0, 1024);
+    int bytesRead;
+    char buf[1024];
+    memset(buf, 0, 1024);
 
-    // char *tokens[512];
-    // memset(tokens, 0, 512 * sizeof(char *));
+    char *tokens[512];
+    memset(tokens, 0, 512 * sizeof(char *));
 
-    // while(1){
-    //     if ((bytesRead = read(0, buf, 1024)) == -1) {
-    //         perror("user input");
-    //         continue;
-    //     } else if (bytesRead == 0){
-    //         exit(1);
-    //     } else {
-    //         while ((token = strtok(buf, " \t\n")) != NULL){
-    //             tokens[i] = token;
-    //             buf = NULL;
-    //             i += 1;
-    //         }
-    //         if (tokens[0] == NULL){
-    //             continue;
-    //         }           
-    //         if (strcmp(tokens[0], "s") == 0){
-    //             client_control_stop();
-    //             continue;
-    //         } else if (strcmp([tokens[0]], "g") == 0){
-    //             client_control_release();
-    //             continue;
-    //         } else if (strcmp(tokens[0], "p") == 0){
-    //             if (tokens[1] != NULL){
-    //                 if (db_print(tokens[1]) == -1){
-    //                     fprintf(stderr, "Cannot open file.\n");
-    //                     continue;
-    //                 }
-    //                 continue;
-    //             }else{
-    //                 if (db_print(stdout) == -1){
-    //                     fprintf(stderr, "Cannot print to stdout.\n");
-    //                     continue;
-    //                 }
-    //                 continue;
-    //             }
+    while(1){
+        if ((bytesRead = read(0, buf, 1024)) == -1) {
+            perror("user input");
+            continue;
+        } else if (bytesRead == 0){
+            exit(1);
+        } else {
+            while ((token = strtok(buf, " \t\n")) != NULL){
+                tokens[i] = token;
+                buf = NULL;
+                i += 1;
+            }
+            if (tokens[0] == NULL){
+                continue;
+            }           
+            if (strcmp(tokens[0], "s") == 0){
+                client_control_stop();
+                continue;
+            } else if (strcmp([tokens[0]], "g") == 0){
+                client_control_release();
+                continue;
+            } else if (strcmp(tokens[0], "p") == 0){
+                if (tokens[1] != NULL){
+                    if (db_print(tokens[1]) == -1){
+                        fprintf(stderr, "Cannot open file.\n");
+                        continue;
+                    }
+                    continue;
+                }else{
+                    if (db_print(stdout) == -1){
+                        fprintf(stderr, "Cannot print to stdout.\n");
+                        continue;
+                    }
+                    continue;
+                }
 
-    //         } else {
-    //             fprintf(stderr, "Invalid Command! \n");
-    //             continue;
-    //         }
-    //     }
+            } else {
+                fprintf(stderr, "Invalid Command! \n");
+                continue;
+            }
+        }
 
-    // }
+    }
 
     sig_handler_destructor(sig_handler);
     // pthread_join(tid, 0);
-    // pthread_exit(0);
-    // delete_all();
+    pthread_exit(0);
+    delete_all();
 
     return 0;
 }
