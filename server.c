@@ -221,6 +221,7 @@ void *monitor_signal(void *arg) {
     }
     delete_all();
     pthread_join(sig_handler->thread, 0);
+    pthread_exit(0);
 }
 
 sig_handler_t *sig_handler_constructor() {
