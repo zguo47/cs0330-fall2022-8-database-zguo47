@@ -332,7 +332,6 @@ int main(int argc, char *argv[]) {
 
     int bytesRead;
     char *token;
-    FILE *outfile = (FILE *)stdout;
     char buf[1024];
     memset(buf, 0, 1024);
 
@@ -368,7 +367,7 @@ int main(int argc, char *argv[]) {
                     }
                     continue;
                 }else{
-                    if (db_print(outfile) == -1){
+                    if (db_print("dev/fd/1") == -1){
                         fprintf(stderr, "Cannot print to stdout.\n");
                         continue;
                     }
