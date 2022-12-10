@@ -332,7 +332,7 @@ int main(int argc, char *argv[]) {
 
     int bytesRead;
     char *token;
-    FILE *outfile = stdout;
+    FILE *outfile = (FILE *)stdout;
     char buf[1024];
     memset(buf, 0, 1024);
 
@@ -349,7 +349,6 @@ int main(int argc, char *argv[]) {
             int i;
             while ((token = strtok(buf, " \t\n")) != NULL){
                 tokens[i] = token;
-                buf = NULL;
                 i += 1;
             }
             if (tokens[0] == NULL){
