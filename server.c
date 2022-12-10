@@ -331,6 +331,8 @@ int main(int argc, char *argv[]) {
     }
 
     int bytesRead;
+    char *token;
+    FILE *outfile = stdout;
     char buf[1024];
     memset(buf, 0, 1024);
 
@@ -344,6 +346,7 @@ int main(int argc, char *argv[]) {
         } else if (bytesRead == 0){
             exit(1);
         } else {
+            int i;
             while ((token = strtok(buf, " \t\n")) != NULL){
                 tokens[i] = token;
                 buf = NULL;
@@ -355,7 +358,7 @@ int main(int argc, char *argv[]) {
             if (strcmp(tokens[0], "s") == 0){
                 client_control_stop();
                 continue;
-            } else if (strcmp([tokens[0]], "g") == 0){
+            } else if (strcmp(tokens[0], "g") == 0){
                 client_control_release();
                 continue;
             } else if (strcmp(tokens[0], "p") == 0){
@@ -366,7 +369,7 @@ int main(int argc, char *argv[]) {
                     }
                     continue;
                 }else{
-                    if (db_print(stdout) == -1){
+                    if (db_print(outfile) == -1){
                         fprintf(stderr, "Cannot print to stdout.\n");
                         continue;
                     }
