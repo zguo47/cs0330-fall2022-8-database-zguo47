@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
     // happens in a call to delete_all() and ensure that there is no way for a
     // thread to add itself to the thread list after the server's final
     // delete_all().
-    // pthread_t tid;
+    pthread_t tid;
     sigset_t set;
     int s;
 
