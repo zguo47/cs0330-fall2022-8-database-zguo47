@@ -234,7 +234,6 @@ int main(int argc, char *argv[]) {
     // happens in a call to delete_all() and ensure that there is no way for a
     // thread to add itself to the thread list after the server's final
     // delete_all().
-    pthread_t tid;
     sigset_t set;
     int s;
 
@@ -249,7 +248,7 @@ int main(int argc, char *argv[]) {
 
     int port = atoi(argv[1]);
     if (port != 0){
-        tid = start_listener(atoi(argv[1]), (void (*)(FILE *))client_constructor);
+            pthread_t tid = start_listener(atoi(argv[1]), (void (*)(FILE *))client_constructor);
     }else{
         fprintf(stderr, "Invalid port!\n");
         exit(1);
