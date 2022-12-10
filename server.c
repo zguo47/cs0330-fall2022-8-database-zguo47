@@ -257,7 +257,6 @@ sig_handler_t *sig_handler_constructor() {
     sig_handler_t *signal_handler = (sig_handler_t *)malloc(sizeof(sig_handler_t));
     sigemptyset(&signal_handler->set);
     sigaddset(&signal_handler->set, SIGINT);
-    int s;
 
     int creat = pthread_create(&signal_handler->thread, 0, (void *(*)(void *))monitor_signal, (void *)signal_handler);
     if (creat != 0){
