@@ -169,8 +169,10 @@ void *run_client(void *arg) {
     char command[1024];
     response[0] = '\0';
 
+    printf("hello\n");
     int recv = comm_serve(new_client->cxstr, response, command);
     while (recv != -1){
+        printf("hi\n");
         interpret_command(command, response, 1024);
     }
 
