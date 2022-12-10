@@ -282,8 +282,7 @@ int main(int argc, char *argv[]) {
     sigset_t set;
     int s;
 
-    sig_handler_t *sig_handler; 
-    sig_handler_constructor(sig_handler);
+    sig_handler_t *sig_handler = sig_handler_constructor();
     
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
