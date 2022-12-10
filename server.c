@@ -67,7 +67,8 @@ void thread_cleanup(void *arg);
 // Called by client threads to wait until progress is permitted
 void client_control_wait() {
     // TODO: Block the calling thread until the main thread calls
-    // client_control_release(). See the client_control_t struct.
+    // client_control_release(). See the client_control_t struct. 
+    client_control_t client_control = (client_control_t *)malloc(sizeof(client_control_t));
 }
 
 // Called by main thread to stop client threads
@@ -93,12 +94,43 @@ void client_constructor(FILE *cxstr) {
     // to the input argument.
     // Step 2: Create the new client thread running the run_client routine.
     // Step 3: Detach the new client thread 
+    client_t *new_client = (client_t *)malloc(sizeof(client_t));
+    new_client->prev = NULL;
+    new_client->next = NULL;
+
+    if (cxstr != NULL){
+        new_client->cxstr = cxstr;
+    }else{
+        free(new_client);
+        fprintf(stderr, "File cannot be null!\n");
+    }
+
+    int creat = pthread_create(&new_client->thread, 0, (void *(*)(void *))run_client, (void *)new_client);
+    if (creat != 0){
+        new_client->cxstr = NULL;
+        free(new_client);
+        handle_error_en(crete, "pthread_create failed");
+    }
+
+    int err = pthread_detach(new_client->thread);
+    if (err != 0){
+        new_client->cxstr = NULL;
+        free(new_client);
+        handle_error_en(err, "pthread_detach failed");
+    }
+
 }
 
 void client_destructor(client_t *client) {
     // TODO: Free and close all resources associated with a client.
     // Whatever was malloc'd in client_constructor should
     // be freed here!
+    comm_shutdown(&new_client->cxstr);
+    new_client->cxstr = NULL;
+    new_client->prev = NULL;
+    new_client->next = NULL;
+    pthread_cancel(&new_client->thread);
+    free(client);
 }
 
 // Code executed by a client thread
@@ -114,7 +146,27 @@ void *run_client(void *arg) {
     //       cleanly.
     //
     // You will need to modify this when implementing functionality for stop and go!
-    return NULL;
+    client_t *new_client = (client_t *)arg;
+    client_t *curr_client;
+    void *retval;
+    while (thread_list_head->next != NULL){ curr_client = thread_list_head->next};
+    curr_client->next = new_client;
+    new_client->prev = curr_client;
+
+    pthread_cleanup_push(thread_cleanup, (void *)new_client);
+
+    char *response[1024];
+    char *command[1024];
+    response[0] = "\0";
+
+    int recv = comm_serve(new_client->cxstr, response, command);
+    while (recv != -1){
+        interpret_command(command, response, strlen(response));
+    }
+
+    pthread_exit(retval);
+    client_destructor(new_client);
+    // pthread_cleanup_pop();
 }
 
 void delete_all() {
@@ -145,7 +197,20 @@ void *monitor_signal(void *arg) {
 sig_handler_t *sig_handler_constructor() {
     // TODO: Create a thread to handle SIGINT. The thread that this function
     // creates should be the ONLY thread that ever responds to SIGINT.
-    return NULL;
+    signal_handler_t *signal_handler = (signal_handler_t *)malloc(sizeof(signal_handler_t));
+    sigemptyset(&signal_handler->set);
+    sigaddset(&signal_handler->set, SIGINT);
+
+    int creat = pthread_create(&signal_handler->thread, 0, (void *(*)(void *))monitor_signal, (void *)sig_handler);
+    if (creat != 0){
+        sigemptyset(&signal_handler->set);
+        free(sig_handler);
+        handle_error_en(crete, "pthread_create failed");
+    }
+    s = pthread_sigmask(SIG_BLOCK, &signal_handler->set, NULL);
+    if (s != 0){
+        handle_error_en(s, "pthread_sigmask");
+    }  
 }
 
 void sig_handler_destructor(sig_handler_t *sighandler) {
@@ -169,6 +234,81 @@ int main(int argc, char *argv[]) {
     // happens in a call to delete_all() and ensure that there is no way for a
     // thread to add itself to the thread list after the server's final
     // delete_all().
+    pthread_t tid;
+    sigset_t set;
+    int s
+
+    // sig_handler_t sig_handler = sig_handler_constructor();
+    
+    sigemptyset(&set);
+    sigaddset(&set, SIGPIPE);
+    s = pthread_sigmask(SIG_BLOCK, &set, NULL);
+    if (s != 0){
+        handle_error_en(s, "pthread_sigmask");
+    }  
+
+    int port = atoi(argv[1]);
+    if (port != NULL && port >= 1024 && port <= 2^16){
+        tid = start_listener(atoi(argv[1]), (void *(*)(FILE *))client_constructor);
+    }else{
+        fprintf(stderr, "Invalid port!\n");
+        exit(1);
+    }
+
+    int bytesRead;
+    char buf[1024];
+    memset(buf, 0, 1024);
+
+    char *tokens[512];
+    memset(tokens, 0, 512 * sizeof(char *));
+
+    // while(1){
+    //     if ((bytesRead = read(0, buffer, 1024)) == -1) {
+    //         perror("user input");
+    //         continue;
+    //     } else if (bytesRead == 0){
+    //         exit(1);
+    //     } else {
+    //         while ((token = strtok(buf, " \t\n")) != NULL){
+    //             tokens[i] = token;
+    //             buf = NULL;
+    //             i += 1;
+    //         }
+    //         if (tokens[0] == NULL){
+    //             continue;
+    //         }           
+    //         if (strcmp(tokens[0], "s") == 0){
+    //             client_control_stop();
+    //             continue;
+    //         } else if (strcmp([tokens[0]], "g") == 0){
+    //             client_control_release();
+    //             continue;
+    //         } else if (strcmp(tokens[0], "p") == 0){
+    //             if (tokens[1] != NULL){
+    //                 if (db_print(tokens[1]) == -1){
+    //                     fprintf(stderr, "Cannot open file.\n");
+    //                     continue;
+    //                 }
+    //                 continue;
+    //             }else{
+    //                 if (db_print(stdout) == -1){
+    //                     fprintf(stderr, "Cannot print to stdout.\n");
+    //                     continue;
+    //                 }
+    //                 continue;
+    //             }
+
+    //         } else {
+    //             fprintf(stderr, "Invalid Command! \n");
+    //             continue;
+    //         }
+    //     }
+
+    // }
+
+    // sig_handler_destructor(sig_handler);
+    pthread_exit(0);
+    delete_all();
 
     return 0;
 }

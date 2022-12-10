@@ -28,7 +28,7 @@ pthread_t start_listener(int port, void (*server)(FILE *)) {
 
     if ((err = pthread_create(&tid, 0, (void *(*)(void *))listener,
                               (void *)server)))
-        handle_error_en(err, "pthread_create");
+        handle_error_en(err, "pthread_create"); 
  
     return tid;
 }
