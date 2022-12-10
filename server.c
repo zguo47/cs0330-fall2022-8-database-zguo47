@@ -248,6 +248,7 @@ void *monitor_signal(void *arg) {
         exit(1);
     }
     delete_all();
+    return NULL;
 }
 
 sig_handler_t *sig_handler_constructor() {
