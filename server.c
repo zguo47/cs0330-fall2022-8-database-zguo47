@@ -153,7 +153,7 @@ void *run_client(void *arg) {
     curr_client->next = new_client;
     new_client->prev = curr_client;
 
-    pthread_cleanup_push(thread_cleanup, (void *)new_client);
+    // pthread_cleanup_push(thread_cleanup, (void *)new_client);
 
     char response[1024];
     char command[1024];
