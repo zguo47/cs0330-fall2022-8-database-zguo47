@@ -188,35 +188,35 @@ void thread_cleanup(void *arg) {
 // decision. One way or another, all of the server's client threads
 // should terminate on SIGINT. The server (this includes the listener
 // thread) should not, however, terminate on SIGINT!
-void *monitor_signal(void *arg) {
-    // TODO: Wait for a SIGINT to be sent to the server process and cancel
-    // all client threads when one arrives.
-    return NULL;
-}
+// void *monitor_signal(void *arg) {
+//     // TODO: Wait for a SIGINT to be sent to the server process and cancel
+//     // all client threads when one arrives.
+//     return NULL;
+// }
 
-sig_handler_t *sig_handler_constructor() {
-    // TODO: Create a thread to handle SIGINT. The thread that this function
-    // creates should be the ONLY thread that ever responds to SIGINT.
-    sig_handler_t *signal_handler = (sig_handler_t *)malloc(sizeof(sig_handler_t));
-    sigemptyset(&signal_handler->set);
-    sigaddset(&signal_handler->set, SIGINT);
+// sig_handler_t *sig_handler_constructor() {
+//     // TODO: Create a thread to handle SIGINT. The thread that this function
+//     // creates should be the ONLY thread that ever responds to SIGINT.
+//     sig_handler_t *signal_handler = (sig_handler_t *)malloc(sizeof(sig_handler_t));
+//     sigemptyset(&signal_handler->set);
+//     sigaddset(&signal_handler->set, SIGINT);
 
-    int creat = pthread_create(&signal_handler->thread, 0, (void *(*)(void *))monitor_signal, (void *)sig_handler);
-    if (creat != 0){
-        sigemptyset(&signal_handler->set);
-        free(sig_handler);
-        handle_error_en(crete, "pthread_create failed");
-    }
-    s = pthread_sigmask(SIG_BLOCK, &signal_handler->set, NULL);
-    if (s != 0){
-        handle_error_en(s, "pthread_sigmask");
-    }  
-}
+//     int creat = pthread_create(&signal_handler->thread, 0, (void *(*)(void *))monitor_signal, (void *)sig_handler);
+//     if (creat != 0){
+//         sigemptyset(&signal_handler->set);
+//         free(sig_handler);
+//         handle_error_en(crete, "pthread_create failed");
+//     }
+//     s = pthread_sigmask(SIG_BLOCK, &signal_handler->set, NULL);
+//     if (s != 0){
+//         handle_error_en(s, "pthread_sigmask");
+//     }  
+// }
 
-void sig_handler_destructor(sig_handler_t *sighandler) {
-    // TODO: Free any resources allocated in sig_handler_constructor.
-    // Cancel and join with the signal handler's thread. 
-}
+// void sig_handler_destructor(sig_handler_t *sighandler) {
+//     // TODO: Free any resources allocated in sig_handler_constructor.
+//     // Cancel and join with the signal handler's thread. 
+// }
 
 // The arguments to the server should be the port number.
 int main(int argc, char *argv[]) {
@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
     sigset_t set;
     int s;
 
-    sig_handler_t sig_handler = sig_handler_constructor();
+    // sig_handler_t sig_handler = sig_handler_constructor();
     
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
@@ -306,7 +306,7 @@ int main(int argc, char *argv[]) {
 
     // }
 
-    sig_handler_destructor(sig_handler);
+    // sig_handler_destructor(sig_handler);
     pthread_exit(0);
     // delete_all();
 
