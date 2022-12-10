@@ -284,7 +284,7 @@ int main(int argc, char *argv[]) {
     sigset_t set;
     int s;
 
-    sig_handler_t *sig_handler = sig_handler_constructor();
+    // sig_handler_t *sig_handler = sig_handler_constructor();
     
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
@@ -353,7 +353,7 @@ int main(int argc, char *argv[]) {
 
     // }
 
-    sig_handler_destructor(sig_handler);
+    // sig_handler_destructor(sig_handler);
     // pthread_join(tid, 0);
     // pthread_exit(0);
     // delete_all();
