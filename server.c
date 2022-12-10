@@ -68,7 +68,7 @@ void thread_cleanup(void *arg);
 void client_control_wait() {
     // TODO: Block the calling thread until the main thread calls
     // client_control_release(). See the client_control_t struct. 
-    client_control_t client_control = (client_control_t *)malloc(sizeof(client_control_t));
+    // client_control_t client_control = (client_control_t *)malloc(sizeof(client_control_t));
 }
 
 // Called by main thread to stop client threads
@@ -109,7 +109,7 @@ void client_constructor(FILE *cxstr) {
     if (creat != 0){
         new_client->cxstr = NULL;
         free(new_client);
-        handle_error_en(crete, "pthread_create failed");
+        handle_error_en(creat, "pthread_create failed");
     }
 
     int err = pthread_detach(new_client->thread);
@@ -125,11 +125,11 @@ void client_destructor(client_t *client) {
     // TODO: Free and close all resources associated with a client.
     // Whatever was malloc'd in client_constructor should
     // be freed here!
-    comm_shutdown(&new_client->cxstr);
-    new_client->cxstr = NULL;
-    new_client->prev = NULL;
-    new_client->next = NULL;
-    pthread_cancel(&new_client->thread);
+    comm_shutdown(&client->cxstr);
+    client->cxstr = NULL;
+    client->prev = NULL;
+    client->next = NULL;
+    pthread_cancel(&client->thread);
     free(client);
 }
 
@@ -149,7 +149,7 @@ void *run_client(void *arg) {
     client_t *new_client = (client_t *)arg;
     client_t *curr_client;
     void *retval;
-    while (thread_list_head->next != NULL){ curr_client = thread_list_head->next};
+    while (thread_list_head->next != NULL){ curr_client = thread_list_head->next; };
     curr_client->next = new_client;
     new_client->prev = curr_client;
 
@@ -159,9 +159,9 @@ void *run_client(void *arg) {
     char *command[1024];
     response[0] = "\0";
 
-    int recv = comm_serve(new_client->cxstr, response, command);
+    int recv = comm_serve(new_client->cxstr, &response, &command);
     while (recv != -1){
-        interpret_command(command, response, strlen(response));
+        interpret_command(&command, &response, strlen(response));
     }
 
     pthread_exit(retval);
@@ -174,7 +174,7 @@ void delete_all() {
     // pthread_cancel function.
 }
 
-// Cleanup routine for client threads, called on cancels and exit.
+Cleanup routine for client threads, called on cancels and exit.
 void thread_cleanup(void *arg) {
     // TODO: Remove the client object from thread list and call
     // client_destructor. This function must be thread safe! The client must
@@ -194,29 +194,29 @@ void *monitor_signal(void *arg) {
     return NULL;
 }
 
-sig_handler_t *sig_handler_constructor() {
-    // TODO: Create a thread to handle SIGINT. The thread that this function
-    // creates should be the ONLY thread that ever responds to SIGINT.
-    signal_handler_t *signal_handler = (signal_handler_t *)malloc(sizeof(signal_handler_t));
-    sigemptyset(&signal_handler->set);
-    sigaddset(&signal_handler->set, SIGINT);
+// sig_handler_t *sig_handler_constructor() {
+//     // TODO: Create a thread to handle SIGINT. The thread that this function
+//     // creates should be the ONLY thread that ever responds to SIGINT.
+//     sig_handler_t *signal_handler = (sig_handler_t *)malloc(sizeof(sig_handler_t));
+//     sigemptyset(&signal_handler->set);
+//     sigaddset(&signal_handler->set, SIGINT);
 
-    int creat = pthread_create(&signal_handler->thread, 0, (void *(*)(void *))monitor_signal, (void *)sig_handler);
-    if (creat != 0){
-        sigemptyset(&signal_handler->set);
-        free(sig_handler);
-        handle_error_en(crete, "pthread_create failed");
-    }
-    s = pthread_sigmask(SIG_BLOCK, &signal_handler->set, NULL);
-    if (s != 0){
-        handle_error_en(s, "pthread_sigmask");
-    }  
-}
+//     int creat = pthread_create(&signal_handler->thread, 0, (void *(*)(void *))monitor_signal, (void *)sig_handler);
+//     if (creat != 0){
+//         sigemptyset(&signal_handler->set);
+//         free(sig_handler);
+//         handle_error_en(crete, "pthread_create failed");
+//     }
+//     s = pthread_sigmask(SIG_BLOCK, &signal_handler->set, NULL);
+//     if (s != 0){
+//         handle_error_en(s, "pthread_sigmask");
+//     }  
+// }
 
-void sig_handler_destructor(sig_handler_t *sighandler) {
-    // TODO: Free any resources allocated in sig_handler_constructor.
-    // Cancel and join with the signal handler's thread. 
-}
+// void sig_handler_destructor(sig_handler_t *sighandler) {
+//     // TODO: Free any resources allocated in sig_handler_constructor.
+//     // Cancel and join with the signal handler's thread. 
+// }
 
 // The arguments to the server should be the port number.
 int main(int argc, char *argv[]) {
@@ -236,9 +236,9 @@ int main(int argc, char *argv[]) {
     // delete_all().
     pthread_t tid;
     sigset_t set;
-    int s
+    int s;
 
-    // sig_handler_t sig_handler = sig_handler_constructor();
+    sig_handler_t sig_handler = sig_handler_constructor();
     
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
     }  
 
     int port = atoi(argv[1]);
-    if (port != NULL && port >= 1024 && port <= 2^16){
+    if (port != 0 && port >= 1024 && port <= 2^16){
         tid = start_listener(atoi(argv[1]), (void *(*)(FILE *))client_constructor);
     }else{
         fprintf(stderr, "Invalid port!\n");
@@ -306,7 +306,7 @@ int main(int argc, char *argv[]) {
 
     // }
 
-    // sig_handler_destructor(sig_handler);
+    sig_handler_destructor(sig_handler);
     pthread_exit(0);
     delete_all();
 
