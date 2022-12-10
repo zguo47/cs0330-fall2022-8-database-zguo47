@@ -265,10 +265,10 @@ sig_handler_t *sig_handler_constructor() {
         free(signal_handler);
         handle_error_en(creat, "pthread_create failed");
     }
-    s = pthread_sigmask(SIG_DFL, &signal_handler->set, NULL);
-    if (s != 0){
-        handle_error_en(s, "pthread_sigmask");
-    }
+    // s = pthread_sigmask(SIG_DFL, &signal_handler->set, NULL);
+    // if (s != 0){
+    //     handle_error_en(s, "pthread_sigmask");
+    // }
     return signal_handler;  
 }
 
