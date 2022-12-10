@@ -147,21 +147,21 @@ void *run_client(void *arg) {
     //
     // You will need to modify this when implementing functionality for stop and go!
     client_t *new_client = (client_t *)arg;
-    client_t *curr_client;
+    // client_t *curr_client;
 
-    if (thread_list_head == NULL){
-        thread_list_head = new_client;
-    } else if (thread_list_head->next == NULL){
-        thread_list_head->next = new_client;
-        new_client->prev = thread_list_head;
-    }
-    else {
-        while (thread_list_head->next != NULL){ 
-            curr_client = thread_list_head->next; 
-        }
-        curr_client->next = new_client;
-        new_client->prev = curr_client;
-    }
+    // if (thread_list_head == NULL){
+    //     thread_list_head = new_client;
+    // } else if (thread_list_head->next == NULL){
+    //     thread_list_head->next = new_client;
+    //     new_client->prev = thread_list_head;
+    // }
+    // else {
+    //     while (thread_list_head->next != NULL){ 
+    //         curr_client = thread_list_head->next; 
+    //     }
+    //     curr_client->next = new_client;
+    //     new_client->prev = curr_client;
+    // }
 
     pthread_cleanup_push(thread_cleanup, (void *)new_client);
 
