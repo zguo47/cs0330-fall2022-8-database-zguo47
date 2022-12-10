@@ -157,7 +157,7 @@ void *run_client(void *arg) {
 
     char response[1024];
     char command[1024];
-    response[0] = "\0";
+    response[0] = '\0';
 
     int recv = comm_serve(new_client->cxstr, response, command);
     while (recv != -1){
@@ -175,11 +175,11 @@ void *run_client(void *arg) {
 // }
 
 // Cleanup routine for client threads, called on cancels and exit.
-void thread_cleanup(void *arg) {
-    // TODO: Remove the client object from thread list and call
-    // client_destructor. This function must be thread safe! The client must
-    // be in the list before this routine is ever run.
-}
+// void thread_cleanup(void *arg) {
+//     // TODO: Remove the client object from thread list and call
+//     // client_destructor. This function must be thread safe! The client must
+//     // be in the list before this routine is ever run.
+// }
 
 // Code executed by the signal handler thread. For the purpose of this
 // assignment, there are two reasonable ways to implement this.
@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
     // happens in a call to delete_all() and ensure that there is no way for a
     // thread to add itself to the thread list after the server's final
     // delete_all().
-    pthread_t tid;
+    // pthread_t tid;
     sigset_t set;
     int s;
 
