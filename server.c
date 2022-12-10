@@ -296,6 +296,7 @@ int main(int argc, char *argv[]) {
     int port = atoi(argv[1]);
     if (port != 0){
             tid = start_listener(atoi(argv[1]), (void (*)(FILE *))client_constructor);
+            pthread_join(tid, 0);
     }else{
         fprintf(stderr, "Invalid port!\n");
         exit(1);
