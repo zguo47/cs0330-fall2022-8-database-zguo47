@@ -341,9 +341,9 @@ int main(int argc, char *argv[]) {
             continue;
         } else if (bytesRead == 0){
             printf("Hihihi\n");
+            pthread_join(tid, 0);
             delete_all();
             sig_handler_destructor(sig_handler);
-            pthread_join(tid, 0);
             pthread_exit(0);
             exit(0);
         } else {
