@@ -377,11 +377,22 @@ int main(int argc, char *argv[]) {
         }
 
     }
+    int cnt;
+    int join;
 
     sig_handler_destructor(sig_handler);
-    pthread_join(tid, 0);
     delete_all();
-    // pthread_exit(0);
+
+    cnt = pthread_cancel(tid);
+    if (cnt != 0){
+        handle_error_en(cnt, "pthread_cancel failed.\n");
+    }
+    join = pthread_join(tid, 0);
+    if (join != 0){
+        handle_error_en(cnt, "pthread_join failed.\n");
+    }
+
+    pthread_exit(0);
 
     return 0;
 }
