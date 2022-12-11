@@ -408,6 +408,7 @@ int main(int argc, char *argv[]) {
                 client_control_release();
                 continue;
             } else if (strcmp(tokens[0], "p") == 0){
+                printf("printing\n");
                 if (tokens[1] != NULL){
                     if (db_print(tokens[1]) == -1){
                         fprintf(stderr, "Cannot open file.\n");
