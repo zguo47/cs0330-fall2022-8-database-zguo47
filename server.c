@@ -191,14 +191,14 @@ void delete_all() {
     if (curr_client != NULL){
         cnt = pthread_cancel(curr_client->thread);
         if (cnt != 0){
-            print("here\n");
+            printf("here\n");
             handle_error_en(cnt, "pthread_cancel failed.\n");
         }
         while (thread_list_head->next != NULL){ 
             curr_client = curr_client->next; 
             cnt = pthread_cancel(curr_client->thread);
             if (cnt != 0){
-            print("here\n");
+            printf("here\n");
             handle_error_en(cnt, "pthread_cancel failed.\n");
             }
         }
