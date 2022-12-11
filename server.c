@@ -211,12 +211,16 @@ void *run_client(void *arg) {
         servercontrol.num_client_threads += 1;
         pthread_mutex_unlock(&servercontrol.server_mutex);
 
-        if (clientcontrol.stopped == 1){
-            printf("calling control_wait\n");
-            client_control_wait();
-        }
+        // if (clientcontrol.stopped == 1){
+        //     printf("calling control_wait\n");
+        //     client_control_wait();
+        // }
 
         while ((recv = comm_serve(new_client->cxstr, response, command)) != -1){
+            if (clientcontrol.stopped == 1){
+                printf("calling control_wait\n");
+                client_control_wait();
+            }
             interpret_command(command, response, 1024);
         }
 
