@@ -182,9 +182,11 @@ void *run_client(void *arg) {
         pthread_mutex_lock(&thread_list_mutex);
         if (thread_list_head == NULL){
             thread_list_head = new_client;
+            printf("thread_list_head added\n");
         } else if (thread_list_head->next == NULL){
             thread_list_head->next = new_client;
             new_client->prev = thread_list_head;
+            printf("thread_list_head->next added\n");
         }
         else {
             while (thread_list_head->next != NULL){ 
@@ -192,6 +194,7 @@ void *run_client(void *arg) {
             }
             curr_client->next = new_client;
             new_client->prev = curr_client;
+            printf("list member added\n");
         }
         pthread_mutex_unlock(&thread_list_mutex);
 
@@ -234,7 +237,7 @@ void delete_all() {
         if (cnt != 0){
             handle_error_en(cnt, "pthread_cancel failed.\n");
         }
-        while (thread_list_head->next != NULL){ 
+        while (curr_client->next != NULL){ 
             curr_client = curr_client->next; 
             cnt = pthread_cancel(curr_client->thread);
             if (cnt != 0){
