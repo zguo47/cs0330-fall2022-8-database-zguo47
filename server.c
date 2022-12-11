@@ -76,8 +76,8 @@ void client_control_wait() {
     // client_control_release(). See the client_control_t struct. 
     int wait;
     // clientcontrol->stop = 1;
-    while (clientcontrol.stopped == 1){
-        pthread_mutex_lock(&clientcontrol.go_mutex);
+    pthread_mutex_lock(&clientcontrol.go_mutex);
+    while (clientcontrol.stopped != 0){
         if ((wait = pthread_cond_wait(&clientcontrol.go, &clientcontrol.go_mutex)) != 0){
             handle_error_en(wait, "pthread_cond_wait failed.\n");
         }
@@ -212,6 +212,7 @@ void *run_client(void *arg) {
         pthread_mutex_unlock(&servercontrol.server_mutex);
 
         if (clientcontrol.stopped == 1){
+            printf("calling control_wait\n");
             client_control_wait();
         }
 
@@ -245,7 +246,6 @@ void delete_all() {
             }
         }
     }
-    printf("delete_all deleting.\n");
 }
 
 // Cleanup routine for client threads, called on cancels and exit.
