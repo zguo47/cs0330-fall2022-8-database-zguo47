@@ -76,9 +76,9 @@ void client_control_wait() {
     // client_control_release(). See the client_control_t struct. 
     int wait;
     // clientcontrol->stop = 1;
-    while (clientcontrol.stop == 1){
+    while (clientcontrol.stopped == 1){
         pthread_mutex_lock(&clientcontrol.go_mutex);
-        if ((wait = pthread_cond_wait(&clientcontrol.go_mutex, &clientcontrol.go)) != 0){
+        if ((wait = pthread_cond_wait(&clientcontrol.go, &clientcontrol.go_mutex)) != 0){
             handle_error_en(wait, "pthread_cond_wait failed.\n");
         }
     }
@@ -91,7 +91,7 @@ void client_control_stop() {
     // TODO: Ensure that the next time client threads call client_control_wait()
     // at the top of the event loop in run_client, they will block.
     pthread_mutex_lock(&clientcontrol.go_mutex);
-    clientcontrol.stop = 1;
+    clientcontrol.stopped = 1;
     pthread_mutex_unlock(&clientcontrol.go_mutex);
 }
 
@@ -102,7 +102,7 @@ void client_control_release() {
     int cond;
 
     pthread_mutex_lock(&clientcontrol.go_mutex);
-    clientcontrol.stop =0;
+    clientcontrol.stopped =0;
 
     if ((cond = pthread_cond_broadcast(&clientcontrol.go)) != 0){
         handle_error_en(cond, "pthread_cond_broadcast failed.\n");
