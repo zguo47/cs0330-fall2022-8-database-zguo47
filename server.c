@@ -339,11 +339,7 @@ int main(int argc, char *argv[]) {
             continue;
         } else if (bytesRead == 0){
             printf("Hihihi\n");
-            sig_handler_destructor(sig_handler);
-            // pthread_join(tid, 0);
-            pthread_exit(0);
-            delete_all();
-            exit(0);
+            break;
         } else {
             int i;
             while ((token = strtok(buf, " \t\n")) != NULL){
@@ -383,9 +379,9 @@ int main(int argc, char *argv[]) {
     }
 
     sig_handler_destructor(sig_handler);
+    delete_all();
     pthread_join(tid, 0);
     pthread_exit(0);
-    delete_all();
 
     return 0;
 }
