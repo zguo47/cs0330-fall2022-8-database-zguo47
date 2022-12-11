@@ -226,7 +226,6 @@ void *run_client(void *arg) {
 void delete_all() {
     // TODO: Cancel every thread in the client thread list with the
     // pthread_cancel function.
-    printf("delete_all deleting.\n");
     client_t *curr_client = thread_list_head;
     int cnt;
 
@@ -243,6 +242,7 @@ void delete_all() {
             }
         }
     }
+    printf("delete_all deleting.\n");
 }
 
 // Cleanup routine for client threads, called on cancels and exit.
