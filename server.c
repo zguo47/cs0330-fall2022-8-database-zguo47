@@ -276,7 +276,7 @@ void thread_cleanup(void *arg) {
     pthread_mutex_lock(&servercontrol.server_mutex);
     servercontrol.num_client_threads -= 1;
     pthread_mutex_unlock(&servercontrol.server_mutex);
-    printf("going to broadcast.\n");
+
     printf("%d", servercontrol.num_client_threads);
     if (servercontrol.num_client_threads == 0){
         pthread_cond_broadcast(&servercontrol.server_cond);
@@ -296,13 +296,15 @@ void *monitor_signal(void *arg) {
     // all client threads when one arrives.
     sig_handler_t *sig_handler = (sig_handler_t *)arg;
     int sigw, sig;
-    sigw = sigwait(&sig_handler->set, &sig);
-    if (sigw != 0){
-        perror("sigwait");
-        exit(1);
+    while(1){
+        sigw = sigwait(&sig_handler->set, &sig);
+        if (sigw != 0){
+            perror("sigwait");
+            exit(0);
+        }
+        printf("SIGINT received, cancelling all clients.\n");
+        delete_all();
     }
-    printf("SIGINT received, cancelling all clients.\n");
-    delete_all();
     return NULL;
 }
 
@@ -399,7 +401,6 @@ int main(int argc, char *argv[]) {
             printf("exiting database\n");
             break;
         } else {
-            printf("receiving input...\n");
             int i = 0;
             char *str = buf;
             while ((token = strtok(str, " \t\n")) != NULL){
