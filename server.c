@@ -76,13 +76,13 @@ void client_control_wait() {
     // client_control_release(). See the client_control_t struct. 
     int wait;
     // clientcontrol->stop = 1;
-    while (clientcontrol->stop == 1){
-        pthread_mutex_lock(&clientcontrol->go_mutex);
-        if ((wait = pthread_cond_wait(&clientcontrol->go_mutex, &clientcontrol->go)) != 0){
+    while (clientcontrol.stop == 1){
+        pthread_mutex_lock(&clientcontrol.go_mutex);
+        if ((wait = pthread_cond_wait(&clientcontrol.go_mutex, &clientcontrol.go)) != 0){
             handle_error_en(wait, "pthread_cond_wait failed.\n");
         }
     }
-    pthread_mutex_unlock(&clientcontrol->go_mutex);
+    pthread_mutex_unlock(&clientcontrol.go_mutex);
 
 }
 
@@ -90,9 +90,9 @@ void client_control_wait() {
 void client_control_stop() {
     // TODO: Ensure that the next time client threads call client_control_wait()
     // at the top of the event loop in run_client, they will block.
-    pthread_mutex_lock(&clientcontrol->go_mutex);
-    clientcontrol->stop = 1;
-    pthread_mutex_unlock(&clientcontrol->go_mutex);
+    pthread_mutex_lock(&clientcontrol.go_mutex);
+    clientcontrol.stop = 1;
+    pthread_mutex_unlock(&clientcontrol.go_mutex);
 }
 
 // Called by main thread to resume client threads
@@ -101,14 +101,14 @@ void client_control_release() {
     // to continue. See the client_control_t struct.
     int cond;
 
-    pthread_mutex_lock(&clientcontrol->go_mutex);
-    clientcontrol->stop =0;
+    pthread_mutex_lock(&clientcontrol.go_mutex);
+    clientcontrol.stop =0;
 
-    if ((cond = pthread_cond_broadcast(&clientcontrol->go)) != 0){
-        handle_error_en(wait, "pthread_cond_broadcast failed.\n");
+    if ((cond = pthread_cond_broadcast(&clientcontrol.go)) != 0){
+        handle_error_en(cond, "pthread_cond_broadcast failed.\n");
     }
 
-    pthread_mutex_unlock(&clientcontrol->go_mutex);
+    pthread_mutex_unlock(&clientcontrol.go_mutex);
 
 }
 
@@ -208,10 +208,10 @@ void *run_client(void *arg) {
         servercontrol.num_client_threads += 1;
         pthread_mutex_unlock(&servercontrol.server_mutex);
 
-        if (client_control->stopped == 1){
+        if (clientcontrol.stopped == 1){
             client_control_wait();
         }
-        
+
         while ((recv = comm_serve(new_client->cxstr, response, command)) != -1){
             interpret_command(command, response, 1024);
         }
@@ -272,7 +272,7 @@ void thread_cleanup(void *arg) {
     pthread_mutex_lock(&servercontrol.server_mutex);
     servercontrol.num_client_threads -= 1;
     pthread_mutex_unlock(&servercontrol.server_mutex);
-    if (servercontrol.num_client_threads = 0){
+    if (servercontrol.num_client_threads == 0){
         pthread_cond_broadcast(&servercontrol.server_cond);
     }
     client_destructor(curr_client);
