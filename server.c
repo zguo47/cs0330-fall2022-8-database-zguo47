@@ -226,6 +226,7 @@ void *run_client(void *arg) {
 void delete_all() {
     // TODO: Cancel every thread in the client thread list with the
     // pthread_cancel function.
+    printf("delete_all deleting.\n");
     client_t *curr_client = thread_list_head;
     int cnt;
 
@@ -272,6 +273,8 @@ void thread_cleanup(void *arg) {
     pthread_mutex_lock(&servercontrol.server_mutex);
     servercontrol.num_client_threads -= 1;
     pthread_mutex_unlock(&servercontrol.server_mutex);
+    printf("going to broadcast.\n");
+    printf("%d", servercontrol.num_client_threads);
     if (servercontrol.num_client_threads == 0){
         pthread_cond_broadcast(&servercontrol.server_cond);
     }
@@ -439,6 +442,7 @@ int main(int argc, char *argv[]) {
     int join;
 
     sig_handler_destructor(sig_handler);
+    db_cleanup();
     delete_all();
 
     while (servercontrol.num_client_threads > 0){
