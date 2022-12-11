@@ -191,14 +191,12 @@ void delete_all() {
     if (curr_client != NULL){
         cnt = pthread_cancel(curr_client->thread);
         if (cnt != 0){
-            printf("here\n");
             handle_error_en(cnt, "pthread_cancel failed.\n");
         }
         while (thread_list_head->next != NULL){ 
             curr_client = curr_client->next; 
             cnt = pthread_cancel(curr_client->thread);
             if (cnt != 0){
-            printf("here\n");
             handle_error_en(cnt, "pthread_cancel failed.\n");
             }
         }
@@ -341,10 +339,10 @@ int main(int argc, char *argv[]) {
             continue;
         } else if (bytesRead == 0){
             printf("Hihihi\n");
-            pthread_join(tid, 0);
-            delete_all();
             sig_handler_destructor(sig_handler);
+            pthread_join(tid, 0);
             pthread_exit(0);
+            delete_all();
             exit(0);
         } else {
             int i;
