@@ -339,6 +339,7 @@ int main(int argc, char *argv[]) {
             perror("user input");
             continue;
         } else if (bytesRead == 0){
+            printf("hihihi\n");
             delete_all();
             sig_handler_destructor(sig_handler);
             pthread_exit(0);
