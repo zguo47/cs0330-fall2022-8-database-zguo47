@@ -340,7 +340,7 @@ int main(int argc, char *argv[]) {
         } else if (bytesRead == 0){
             printf("Hihihi\n");
             sig_handler_destructor(sig_handler);
-            pthread_join(tid, 0);
+            // pthread_join(tid, 0);
             pthread_exit(0);
             delete_all();
             exit(0);
