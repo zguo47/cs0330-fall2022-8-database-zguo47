@@ -320,7 +320,6 @@ int main(int argc, char *argv[]) {
     int port = atoi(argv[1]);
     if (port != 0){
             tid = start_listener(atoi(argv[1]), (void (*)(FILE *))client_constructor);
-            pthread_join(tid, 0);
     }else{
         fprintf(stderr, "Invalid port!\n");
         exit(1);
@@ -339,9 +338,10 @@ int main(int argc, char *argv[]) {
             perror("user input");
             continue;
         } else if (bytesRead == 0){
-            printf("hihihi\n");
+            printf("Hihihi\n");
             delete_all();
             sig_handler_destructor(sig_handler);
+            pthread_join(tid, 0);
             pthread_exit(0);
             exit(0);
         } else {
@@ -383,7 +383,7 @@ int main(int argc, char *argv[]) {
     }
 
     sig_handler_destructor(sig_handler);
-    // pthread_join(tid, 0);
+    pthread_join(tid, 0);
     pthread_exit(0);
     delete_all();
 
