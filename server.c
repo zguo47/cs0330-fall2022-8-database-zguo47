@@ -393,18 +393,23 @@ int main(int argc, char *argv[]) {
             printf("exiting database\n");
             break;
         } else {
-            int i;
-            while ((token = strtok(buf, " \t\n")) != NULL){
+            printf("receiving input...\n");
+            int i = 0;
+            char *str = buf;
+            while ((token = strtok(str, " \t\n")) != NULL){
                 tokens[i] = token;
+                str = NULL;
                 i += 1;
             }
             if (tokens[0] == NULL){
                 continue;
             }           
             if (strcmp(tokens[0], "s") == 0){
+                printf("stopping\n");
                 client_control_stop();
                 continue;
             } else if (strcmp(tokens[0], "g") == 0){
+                printf("going\n");
                 client_control_release();
                 continue;
             } else if (strcmp(tokens[0], "p") == 0){
