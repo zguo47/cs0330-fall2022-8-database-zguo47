@@ -264,10 +264,7 @@ sig_handler_t *sig_handler_constructor() {
         free(signal_handler);
         handle_error_en(creat, "pthread_create failed");
     }
-    // s = pthread_sigmask(SIG_DFL, &signal_handler->set, NULL);
-    // if (s != 0){
-    //     handle_error_en(s, "pthread_sigmask");
-    // }
+    
     return signal_handler;  
 }
 
@@ -342,7 +339,10 @@ int main(int argc, char *argv[]) {
             perror("user input");
             continue;
         } else if (bytesRead == 0){
-            exit(1);
+            delete_all();
+            sig_handler_destructor(sig_handler);
+            pthread_exit(0);
+            exit(0);
         } else {
             int i;
             while ((token = strtok(buf, " \t\n")) != NULL){
