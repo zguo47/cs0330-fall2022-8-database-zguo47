@@ -108,8 +108,8 @@ int db_remove(char *name) {
     // first, find the node to be removed
     if ((dnode = search(name, &head, &parent, l_write)) == 0) {
         // it's not there
-        // pthread_rwlock_unlock(&dnode->lock);
-        // pthread_rwlock_unlock(&parent->lock);
+        pthread_rwlock_unlock(&dnode->lock);
+        pthread_rwlock_unlock(&parent->lock);
         return (0);
     }
     // pthread_rwlock_unlock(&dnode->lock);
