@@ -79,7 +79,7 @@ int db_add(char *name, char *value) {
     node_t *parent;
     node_t *target;
     node_t *newnode;
-    pthread_rwlock_wrlock(head.lock);
+    pthread_rwlock_wrlock(&head.lock);
 
     if ((target = search(name, &head, &parent, l_write)) != 0) {
         pthread_rwlock_unlock(&target->lock);
@@ -103,7 +103,7 @@ int db_remove(char *name) {
     node_t *parent;
     node_t *dnode;
     node_t *next;
-    pthread_rwlock_wrlock(head.lock);
+    pthread_rwlock_wrlock(&head.lock);
 
     // first, find the node to be removed
     if ((dnode = search(name, &head, &parent, l_write)) == 0) {
@@ -121,20 +121,20 @@ int db_remove(char *name) {
 
     if (dnode->rchild == 0) {
         if (dnode->lchild != 0){
-            pthread_rwlock_wrlock(&dnode->lchild);
+            pthread_rwlock_wrlock(&dnode->lchild->lock);
         }
         if (strcmp(dnode->name, parent->name) < 0)
             parent->lchild = dnode->lchild;
         else
             parent->rchild = dnode->lchild;
         if (dnode->lchild != 0){
-            pthread_rwlock_unlock(&dnode->lchild);
+            pthread_rwlock_unlock(&dnode->lchild->lock);
         }
         // done with dnode
         node_destructor(dnode);
     } else if (dnode->lchild == 0) {
         if (dnode->rchild != 0){
-            pthread_rwlock_wrlock(&dnode->rchild);
+            pthread_rwlock_wrlock(&dnode->rchild->lock);
         }
         // ditto if the node had no left child
         if (strcmp(dnode->name, parent->name) < 0)
@@ -142,7 +142,7 @@ int db_remove(char *name) {
         else
             parent->rchild = dnode->rchild;
         if (dnode->rchild != 0){
-            pthread_rwlock_unlock(&dnode->rchild);
+            pthread_rwlock_unlock(&dnode->rchild->lock);
         }
         // done with dnode
         node_destructor(dnode);
@@ -156,12 +156,12 @@ int db_remove(char *name) {
         node_t **pnext = &dnode->rchild;
 
         while (next->lchild != 0) {
-            pthread_rwlock_wrlock(&next->lchild);
+            pthread_rwlock_wrlock(&next->lchild->lock);
             // work our way down the lchild chain, finding the smallest node
             // in the subtree.h
             node_t *nextl = next->lchild;
             pnext = &next->lchild;
-            pthread_rwlock_unlock(&next->lchild);
+            pthread_rwlock_unlock(&next->lchild->lock);
             next = nextl;
         }
 
@@ -211,7 +211,7 @@ node_t *search(char *name, node_t *parent, node_t **parentpp, enum locktype lt) 
             result = next;
         } else {
             pthread_rwlock_unlock(&parent->lock);
-            return search(name, next, parentpp);
+            return search(name, next, parentpp, lt);
         }
     }
 
