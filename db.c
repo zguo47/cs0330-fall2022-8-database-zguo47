@@ -332,7 +332,6 @@ static inline void print_spaces(int lvl, FILE *out) {
         fprintf(out, " ");
     }
 }
-pthread_rwlock_t treelock = PTHREAD_RWLOCK_INITIALIZER;
 
 /* helper function for db_print */
 void db_print_recurs(node_t *node, int lvl, FILE *out) {
@@ -349,6 +348,10 @@ void db_print_recurs(node_t *node, int lvl, FILE *out) {
         fprintf(out, "(null)\n");
         return;
     }
+    int rl_err;
+    if ((rl_err = pthread_rwlock_rdlock(&node->lock)) != 0) {
+        handle_error_en(rl_err, "pthread_rwlock_rdlock");
+    }
 
     if (node == &head) {
         fprintf(out, "(root)\n");
@@ -359,9 +362,9 @@ void db_print_recurs(node_t *node, int lvl, FILE *out) {
     db_print_recurs(node->lchild, lvl + 1, out);
     db_print_recurs(node->rchild, lvl + 1, out);
 
-    int t2lock;
-    if ((t2lock = pthread_rwlock_unlock(&treelock)) != 0){
-        handle_error_en(t2lock, "pthread_rwlock_unlock");
+    int ul_err;
+    if ((ul_err = pthread_rwlock_unlock(&node->lock)) != 0) {
+        handle_error_en(ul_err, "pthread_rwlock_unlock");
     }
 
 }
