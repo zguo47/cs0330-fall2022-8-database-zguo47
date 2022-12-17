@@ -15,7 +15,7 @@ extern node_t head;
 
 enum locktype {l_read, l_write};
 
-node_t *search(char *name, node_t *parent, node_t **parentp);
+node_t *search(char *name, node_t *parent, node_t **parentp, enum locktype lt);
 
 /**
   * The db_query() function calls search() to retrieve the node associated with the 
