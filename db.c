@@ -338,10 +338,6 @@ void db_print_recurs(node_t *node, int lvl, FILE *out) {
     //TODO: Make this thread-safe!
     // print spaces to differentiate levels
     print_spaces(lvl, out);
-    int tlock;
-    if ((tlock = pthread_rwlock_rdlock(&treelock)) != 0){
-        handle_error_en(tlock, "pthread_rwlock_rdlock");
-    }
 
     // print out the current node
     if (node == NULL) {
