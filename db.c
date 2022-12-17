@@ -121,20 +121,20 @@ int db_remove(char *name) {
 
     if (dnode->rchild == 0) {
         if (dnode->lchild != 0){
-            pthread_rwlock_wrlock(dnode->lchild);
+            pthread_rwlock_wrlock(&dnode->lchild);
         }
         if (strcmp(dnode->name, parent->name) < 0)
             parent->lchild = dnode->lchild;
         else
             parent->rchild = dnode->lchild;
         if (dnode->lchild != 0){
-            pthread_rwlock_unlock(dnode->lchild);
+            pthread_rwlock_unlock(&dnode->lchild);
         }
         // done with dnode
         node_destructor(dnode);
     } else if (dnode->lchild == 0) {
         if (dnode->rchild != 0){
-            pthread_rwlock_wrlock(dnode->rchild);
+            pthread_rwlock_wrlock(&dnode->rchild);
         }
         // ditto if the node had no left child
         if (strcmp(dnode->name, parent->name) < 0)
@@ -142,7 +142,7 @@ int db_remove(char *name) {
         else
             parent->rchild = dnode->rchild;
         if (dnode->rchild != 0){
-            pthread_rwlock_unlock(dnode->rchild);
+            pthread_rwlock_unlock(&dnode->rchild);
         }
         // done with dnode
         node_destructor(dnode);
@@ -156,12 +156,12 @@ int db_remove(char *name) {
         node_t **pnext = &dnode->rchild;
 
         while (next->lchild != 0) {
-            pthread_rwlock_wrlock(next->lchild);
+            pthread_rwlock_wrlock(&next->lchild);
             // work our way down the lchild chain, finding the smallest node
             // in the subtree.h
             node_t *nextl = next->lchild;
             pnext = &next->lchild;
-            pthread_rwlock_unlock(next->lchild);
+            pthread_rwlock_unlock(&next->lchild);
             next = nextl;
         }
 
@@ -202,7 +202,11 @@ node_t *search(char *name, node_t *parent, node_t **parentpp, enum locktype lt) 
     if (next == NULL) {
         result = NULL;
     } else {
-        lock(lt, &next->lock);
+        if ((lt) == l_read){
+            pthread_rwlock_rdlock(&next->lock);
+        }else{
+            pthread_rwlock_wrlock(&next->lock);
+        }
         if (strcmp(name, next->name) == 0) {
             result = next;
         } else {

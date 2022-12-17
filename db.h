@@ -15,10 +15,6 @@ extern node_t head;
 
 enum locktype {l_read, l_write};
 
-#define lock(lt, lk) ((lt) == l_read)?
-    pthread_rwlock_rdlock(lk):
-    pthread_rwlock_wrlock(lk)
-
 node_t *search(char *name, node_t *parent, node_t **parentp);
 
 /**
