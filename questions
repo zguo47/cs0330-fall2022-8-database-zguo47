@@ -2,14 +2,38 @@ Questions
 
 1. Consider the thread created in start_listener. How many threads with this functionality should be running on the server at any given time?
 
-
+There should be only one. This is the main thread that listens over the incoming client threads. When we terminate the 
+server, this thread is also terminated. We create a new main thread when we run the server again. 
 
 2. In the listener function, what do each of the following fields of the sockaddr_in struct represent: sin_family, sin_port, and sin_addr.s_addr?
 
+sin_family: The address family, which is always set to AF_INET.
+sin_port: Represents the port in network byte order.
+sin_addr.s_addr: The IP host interface address in network byte order. Should be assigned one of the INADDR_ * vallues. 
+
 3. What is the purpose of each of the following function calls in listener: socket, bind, listen, and accept? You should explain what each call does and what the effect would be if it were not called.
 
+socket() creates an endpoint for communication and returns a file descriptor that refers to that endpoint. This is the basis
+for all our later function calls and therefore must be called first.
+bind() binds a unique local name to the socket with desciptor socket. If we do not call it, there will be no address assgined
+to the address family of the socket. 
+listen() marks the socket reffered to by sockfd as a passive socket, that is, a socket used to accept incoming connection
+requests using accept(). If we do not call, it will not be able to accept connection requests.
+accept() extracts connection requests for the listening socket, creates a new connected socket, and returns a new file 
+descriptor referring to that socket. We cannot get the connection requests without this function.
+
 4. Which protocol (TCP or UDP) is used for communication? Why is this protocol used? (Hint: see line 37 in comm.c)
+TCP is used in our case. It is a connection-oriented protocol, and it will retransmit lost data packets. 
 
 5. Describe what comm_serve does. How are the response and command parameters used? What would happen if the stream pointed to by cxstr were closed?
+Comm_serve is used to receive the input commands and output responses. The commands are stored as a buffer in the parameter
+command, and the response generated will be stored inside response. The command will be used in interpret_command for 
+interpreting, and the it will put its response if the parameter response. If the stream is closed, comm_serve will handle 
+this case by stop accepting new commands and prints out client connection terminated.
 
 6. Describe, in detail, what happens during each iteration of the while loop in the listener function. Be sure to include explanations of all significant function calls.
+
+In each iteration a new client thread is "listened" by the function and a new file descriptor is generated with respect to
+it. The accept() function call will exact the first among the connection requests that waits in queue, and returning a
+file descriptor referring to the socket. fdopen() opens this file descriptor and then passing it to the server() function.
+When error occurs, it enters the next iteration without terminating. 

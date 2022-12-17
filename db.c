@@ -295,7 +295,7 @@ node_t *search(char *name, node_t *parent, node_t **parentpp, enum locktype lt) 
         if (lt == l_read){
             int rd2err;
             if ((rd2err = pthread_rwlock_rdlock(&next->lock)) != 0){
-                handle_error_en(rd2err, "pthread_rwlock_wrlock");
+                handle_error_en(rd2err, "pthread_rwlock_rdlock");
             }
         }else{
             int wrerr;

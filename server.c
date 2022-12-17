@@ -75,14 +75,21 @@ void client_control_wait() {
     // TODO: Block the calling thread until the main thread calls
     // client_control_release(). See the client_control_t struct. 
     int wait;
-    // clientcontrol->stop = 1;
-    pthread_mutex_lock(&clientcontrol.go_mutex);
+
+    int lockerr;
+    if ((lockerr = pthread_mutex_lock(&clientcontrol.go_mutex)) != 0){
+        handle_error_en(lockerr, "pthread_mutex_lock");
+    }
     while (clientcontrol.stopped != 0){
         if ((wait = pthread_cond_wait(&clientcontrol.go, &clientcontrol.go_mutex)) != 0){
             handle_error_en(wait, "pthread_cond_wait failed.\n");
         }
     }
-    pthread_mutex_unlock(&clientcontrol.go_mutex);
+
+    int unlockerr;
+    if ((unlockerr = pthread_mutex_unlock(&clientcontrol.go_mutex)) != 0){
+        handle_error_en(unlockerr, "pthread_mutex_unlock");
+    }
 
 }
 
@@ -90,9 +97,16 @@ void client_control_wait() {
 void client_control_stop() {
     // TODO: Ensure that the next time client threads call client_control_wait()
     // at the top of the event loop in run_client, they will block.
-    pthread_mutex_lock(&clientcontrol.go_mutex);
+    int lockerr;
+    if ((lockerr = pthread_mutex_lock(&clientcontrol.go_mutex)) != 0){
+        handle_error_en(lockerr, "pthread_mutex_lock");
+    }
     clientcontrol.stopped = 1;
-    pthread_mutex_unlock(&clientcontrol.go_mutex);
+
+    int unlockerr;
+    if ((unlockerr = pthread_mutex_unlock(&clientcontrol.go_mutex)) != 0){
+        handle_error_en(unlockerr, "pthread_mutex_unlock");
+    }
 }
 
 // Called by main thread to resume client threads
@@ -100,15 +114,22 @@ void client_control_release() {
     // TODO: Allow clients that are blocked within client_control_wait()
     // to continue. See the client_control_t struct.
     int cond;
+    int lockerr;
+    if ((lockerr = pthread_mutex_lock(&clientcontrol.go_mutex)) != 0){
+        handle_error_en(lockerr, "pthread_mutex_lock");
+    }
 
-    pthread_mutex_lock(&clientcontrol.go_mutex);
     clientcontrol.stopped =0;
 
     if ((cond = pthread_cond_broadcast(&clientcontrol.go)) != 0){
         handle_error_en(cond, "pthread_cond_broadcast failed.\n");
     }
 
-    pthread_mutex_unlock(&clientcontrol.go_mutex);
+    int unlockerr;
+    if ((unlockerr = pthread_mutex_unlock(&clientcontrol.go_mutex)) != 0){
+        handle_error_en(unlockerr, "pthread_mutex_unlock");
+    }
+
 
 }
 
@@ -158,7 +179,11 @@ void client_destructor(client_t *client) {
     client->cxstr = NULL;
     client->prev = NULL;
     client->next = NULL;
-    pthread_cancel(client->thread);
+    int cnt;
+    cnt = pthread_cancel(client->thread);
+    if (cnt != 0){
+        handle_error_en(cnt, "pthread_cancel failed.\n");
+    }
     free(client);
 }
 
@@ -179,7 +204,10 @@ void *run_client(void *arg) {
     client_t *curr_client;
 
     if (accept_or_not == 1){
-        pthread_mutex_lock(&thread_list_mutex);
+        int lockerr;
+        if ((lockerr = pthread_mutex_lock(&thread_list_mutex)) != 0){
+            handle_error_en(lockerr, "pthread_mutex_lock");
+        }
         if (thread_list_head == NULL){
             thread_list_head = new_client;
             printf("thread_list_head added\n");
@@ -196,7 +224,10 @@ void *run_client(void *arg) {
             new_client->prev = curr_client;
             printf("list member added\n");
         }
-        pthread_mutex_unlock(&thread_list_mutex);
+        int unlockerr;
+        if ((unlockerr = pthread_mutex_unlock(&thread_list_mutex)) != 0){
+            handle_error_en(unlockerr, "pthread_mutex_unlock");
+        }
 
         pthread_cleanup_push(thread_cleanup, (void *)new_client);
 
@@ -207,14 +238,18 @@ void *run_client(void *arg) {
         printf("hello\n");
         int recv;
 
-        pthread_mutex_lock(&servercontrol.server_mutex);
-        servercontrol.num_client_threads += 1;
-        pthread_mutex_unlock(&servercontrol.server_mutex);
+        int lockerr2;
+        if ((lockerr2 = pthread_mutex_lock(&servercontrol.server_mutex)) != 0){
+            handle_error_en(lockerr2, "pthread_mutex_lock");
+        }
 
-        // if (clientcontrol.stopped == 1){
-        //     printf("calling control_wait\n");
-        //     client_control_wait();
-        // }
+        servercontrol.num_client_threads += 1;
+        
+        int unlockerr2;
+        if ((unlockerr2 = pthread_mutex_unlock(&servercontrol.server_mutex)) != 0){
+            handle_error_en(unlockerr2, "pthread_mutex_unlock");
+        }
+
 
         while ((recv = comm_serve(new_client->cxstr, response, command)) != -1){
             if (clientcontrol.stopped == 1){
@@ -257,7 +292,11 @@ void thread_cleanup(void *arg) {
     // TODO: Remove the client object from thread list and call
     // client_destructor. This function must be thread safe! The client must
     // be in the list before this routine is ever run.
-    pthread_mutex_lock(&thread_list_mutex);
+            int lockerr;
+            if ((lockerr = pthread_mutex_lock(&thread_list_mutex)) != 0){
+                handle_error_en(lockerr, "pthread_mutex_lock");
+            }
+
     client_t *curr_client = (client_t *)arg;
     client_t *prev_client = curr_client->prev;
     client_t *next_client = curr_client->next;
@@ -276,14 +315,26 @@ void thread_cleanup(void *arg) {
         curr_client->prev = NULL;
         curr_client->next = NULL;
     }
-    pthread_mutex_unlock(&thread_list_mutex);
-    pthread_mutex_lock(&servercontrol.server_mutex);
-    servercontrol.num_client_threads -= 1;
-    pthread_mutex_unlock(&servercontrol.server_mutex);
+            int unlockerr;
+            if ((unlockerr = pthread_mutex_unlock(&thread_list_mutex)) != 0){
+                handle_error_en(unlockerr, "pthread_mutex_unlock");
+            }
+            int lockerr2;
+            if ((lockerr2 = pthread_mutex_lock(&servercontrol.server_mutex)) != 0){
+                handle_error_en(lockerr2, "pthread_mutex_lock");
+            }
 
-    printf("%d", servercontrol.num_client_threads);
+            servercontrol.num_client_threads -= 1;
+            int unlockerr2;
+            if ((unlockerr2 = pthread_mutex_unlock(&servercontrol.server_mutex)) != 0){
+                handle_error_en(unlockerr2, "pthread_mutex_unlock");
+            }
+
     if (servercontrol.num_client_threads == 0){
-        pthread_cond_broadcast(&servercontrol.server_cond);
+        int cond;
+        if ((cond = pthread_cond_broadcast(&servercontrol.server_cond)) != 0){
+            handle_error_en(cond, "pthread_cond_broadcast failed.\n");
+        }
     }
     client_destructor(curr_client);
 }
@@ -399,9 +450,16 @@ int main(int argc, char *argv[]) {
             perror("user input");
             continue;
         } else if (bytesRead == 0){
-            pthread_mutex_lock(&thread_list_mutex);
+            int lockerr;
+            if ((lockerr = pthread_mutex_lock(&thread_list_mutex)) != 0){
+                handle_error_en(lockerr, "pthread_mutex_lock");
+            }
             accept_or_not = 0;
-            pthread_mutex_unlock(&thread_list_mutex);
+            int unlockerr;
+            if ((unlockerr = pthread_mutex_unlock(&thread_list_mutex)) != 0){
+                handle_error_en(unlockerr, "pthread_mutex_unlock");
+            }
+
             printf("exiting database\n");
             break;
         } else {
@@ -454,11 +512,21 @@ int main(int argc, char *argv[]) {
     delete_all();
 
     while (servercontrol.num_client_threads > 0){
-        pthread_mutex_lock(&servercontrol.server_mutex);
-        pthread_cond_wait(&servercontrol.server_cond, &servercontrol.server_mutex);
-    }
+        int lockerr2;
+        if ((lockerr2 = pthread_mutex_lock(&servercontrol.server_mutex)) != 0){
+            handle_error_en(lockerr2, "pthread_mutex_lock");
+        }
 
-    pthread_mutex_unlock(&servercontrol.server_mutex);
+        int wat;
+        if ((wat = pthread_cond_wait(&servercontrol.server_cond, &servercontrol.server_mutex)) != 0){
+            handle_error_en(wat, "pthread_cond_wait failed.\n");
+        }
+
+    }
+    int unlockerr2;
+    if ((unlockerr2 = pthread_mutex_unlock(&servercontrol.server_mutex)) != 0){
+        handle_error_en(unlockerr2, "pthread_mutex_unlock");
+    }
 
     cnt = pthread_cancel(tid);
     if (cnt != 0){
