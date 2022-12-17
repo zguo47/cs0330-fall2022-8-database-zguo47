@@ -3,12 +3,6 @@
 
 #include <pthread.h>
 
-enum locktype (l_read, l_write);
-
-#define lock(lt, lk) ((lt) == l_read)?
-    pthread_rwlock_rdlock(lk):
-    pthread_rwlock_wrlock(lk)
-
 typedef struct node {
     char *name;
     char *value;
