@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "./comm.h"
 
 #define MAXLEN 256
 
