@@ -230,7 +230,6 @@ int db_remove(char *name) {
         }
 
         while (next->lchild != 0) {
-            pthread_rwlock_wrlock(&next->lchild->lock);
             // work our way down the lchild chain, finding the smallest node
             // in the subtree.h
             node_t *nextl = next->lchild;
